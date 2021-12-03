@@ -1,0 +1,22 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+D:/Clion/Snake_Final_Project/main.cpp
+iostream
+-
+iomanip
+-
+string
+-
+stdio.h
+-
+stdlib.h
+-
+time.h
+-
+
