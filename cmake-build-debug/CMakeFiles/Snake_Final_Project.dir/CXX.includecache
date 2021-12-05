@@ -19,4 +19,12 @@ stdlib.h
 -
 time.h
 -
+conio.h
+-
+windows.h
+-
+chrono
+-
+thread
+-
 
