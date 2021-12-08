@@ -13,11 +13,7 @@ iomanip
 -
 string
 -
-stdio.h
--
 stdlib.h
--
-time.h
 -
 conio.h
 -
@@ -25,6 +21,6 @@ windows.h
 -
 chrono
 -
-thread
+future
 -
 

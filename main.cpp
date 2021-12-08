@@ -1,13 +1,11 @@
 #include <iostream>
 #include <iomanip>
 #include <string>
-#include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 #include <conio.h>
 #include <windows.h>
 #include <chrono>
-#include <thread>
+#include <future>
 using namespace std;
 
 //Variables declarations
@@ -15,8 +13,9 @@ using namespace std;
 #define y_size 27
 enum {GROUND,FOOD,WALL,HEAD,BODY}; //index -> 0,1,2,3,4
 enum {UP,DOWN,LEFT,RIGHT}; //direction -> 0,1,2,3
+bool gameOver = false;
+int direction = RIGHT;
 //
-
 
 //class definition
 class snake
@@ -25,31 +24,40 @@ private:
     int score = 0;
     int ground[x_size][y_size];
     int length;
-    int pos[2] = {1,1}; //Snake head's (X,Y) coordinate // init place at (1,1)
-
+    int x = 25 ,y = 15; //Snake head's (X,Y) coordinate // init place at (5,5)
 
 public:
+    //ground
     void initPlayground();
     void drawGround();
 
+    //score
     void setScore(int s);
     void drawScore();
 
-    int onTouch(int x, int y); //tells what thing does the snake's head touched
+    //game logic
 
+
+    //character info.
     int getLength(); //return snake's length
     void setLength();
     void setHeadPos(int x ,int y);
+    int onTouch(int x, int y); //tells what thing does the snake's head touched
 
-    int direction;
+
+    //character movement
+    void moveDirection(int direction);
 };
 
 //Global Function Prototypes
-void readInput(snake Snake);
+void readInput();
 void resetColor();
 void clearScreen();
+void gotoXY(int x, int y);
+void setWindowSize(int width, int height);
 //
 
+//start of class function definition
 void snake::initPlayground(){
     //In this function, it will generate random location food, obstacles,
     //infill GROUND
@@ -74,7 +82,6 @@ void snake::initPlayground(){
 
     int temp ;
     for(int i = 1 ; i <= 7 ; i++){
-
         if(temp != rand()){
             int x = rand() % (x_size - 2) + 1 ;
             int y = rand() % (y_size - 2) + 1 ;
@@ -85,43 +92,32 @@ void snake::initPlayground(){
             int y = rand() % (y_size - 2) + 1 ;
             ground[x][y] = FOOD ;
         }
-
         temp = rand();
     }
-
-
-
 }
-
 void snake::setScore(int s) {
     this->score = s ;
 }
-
 void snake::drawScore(){
-    cout << string(20,' ') << "////////////////////" << endl;
-    cout << string(20,' ') << setfill(' ') << "//" << setw(18) << setfill(' ')  << "//" << endl;
-    cout << string(20,' ') <<"//" << "    " << "Score: " << score  << "    "  << "//" << endl;
-    cout << string(20,' ') <<"//" << setw(18) << setfill(' ')  << "//" << endl;
-    cout << string(20,' ') <<"////////////////////" << endl;
+    cout << string(15,' ') << "////////////////////" << endl;
+    cout << string(15,' ') << setfill(' ') << "//" << setw(18) << setfill(' ')  << "//" << endl;
+    cout << string(15,' ') <<"//" << "    " << "Score: " << score  << "    "  << "//" << endl;
+    cout << string(15,' ') <<"//" << setw(18) << setfill(' ')  << "//" << endl;
+    cout << string(15,' ') <<"////////////////////" << endl;
     cout << endl ;
 }
-
 void snake::drawGround() {
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     clearScreen();
-
     drawScore();
     for(int i = 0 ; i <= y_size-1 ; i++){
         for(int j = 0 ; j <= x_size-1 ; j++){
             if(ground[j][i] == WALL){
                 SetConsoleTextAttribute(hConsole, 11);
-                cout << (char)2  ;
+                cout << "*"  ;
             }else if(ground[j][i] == GROUND){
                 SetConsoleTextAttribute(hConsole, 7);
                 cout << " " ;
-            }else if(ground[j][i] == HEAD){
-                SetConsoleTextAttribute(hConsole, 14);
-                cout << (char)2  ;
             }else if(ground[j][i] == FOOD){
                 cout << "+" ;
             }
@@ -130,20 +126,42 @@ void snake::drawGround() {
     }
     resetColor(); //reset Color
 }
-
 int snake::onTouch(int x, int y) {
     return ground[x][y] ;
 }
-
 int snake::getLength() {
     return this->length;
 }
-
-void snake::setHeadPos(int x, int y){
+void snake::setHeadPos(int X, int Y){
     //set "Head" position
-    pos[0] = x ;
-    pos[1] = y ;
-    ground[x][y] = HEAD ;
+    x = X;
+    y = Y;
+}
+void snake::moveDirection(int direction){
+    if( (x < 50 && x > 0) && (y < 25 && y > 0)){
+        switch(direction){
+            case UP :
+                gotoXY(x,y);
+                cout << " ";
+                y--;
+                gotoXY(x,y);
+                cout << (char)2 ;
+                Sleep(10);
+                break;
+
+            case DOWN :
+
+                break;
+
+            case LEFT:
+
+                break;
+
+            case RIGHT:
+
+                break;
+        }
+    }
 
 }
 // End of class definition
@@ -151,18 +169,31 @@ void snake::setHeadPos(int x, int y){
 
 //main function
 int main() {
+    setWindowSize(450,600);
     snake Snake;
     Snake.initPlayground();
-
-    Snake.setScore(5);
-    Snake.setHeadPos(12,12);
     Snake.drawGround();
 
-    int temp ;
-    for(int i = 1 ; i <= 7 ; i++) {
+    thread t1 (readInput);
+    t1.join();
 
+    gotoXY(0,0);
+    cout << (char)2 ;
+    gotoXY(0,0);
+    cout << (char)127;
+    gotoXY(49,24);
+    cout << (char)2 ;
+
+    while(!gameOver){
+        cout << direction << endl ;
     }
 
+
+
+
+
+
+    gotoXY(0,33);
     system("pause");
     return 0;
 }
@@ -171,33 +202,7 @@ void resetColor(){
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     SetConsoleTextAttribute(hConsole, 7);
 }
-void readInput(snake Snake){
-    char ch ;
-    do
-    {
-        ch = getch();
-        switch(ch)
-        {
-            case 'W':
-            case 'w':
-                Snake.direction = UP;
-                break;
-            case 'A':
-            case 'a':
-                Snake.direction = LEFT;
-                break;
-            case 's':
-            case 'S':
-                Snake.direction = DOWN;
-                break;
-            case 'D':
-            case 'd':
-                Snake.direction = RIGHT;
-                break;
-        }
-    }while (ch != 'Q' && ch!='q'); ///TODO: Change to pause game
-}
-void gotoxy(int column, int row)
+void gotoXY(int x, int y)
 {
     HANDLE hStdOut;
     COORD coord;
@@ -205,8 +210,8 @@ void gotoxy(int column, int row)
     hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
     if (hStdOut == INVALID_HANDLE_VALUE) return;
 
-    coord.X = column;
-    coord.Y = row;
+    coord.X = x + 1;
+    coord.Y = y + 7;
     SetConsoleCursorPosition(hStdOut, coord);
 }
 void clearScreen()
@@ -244,4 +249,21 @@ void clearScreen()
 
     /* Move the cursor home */
     SetConsoleCursorPosition(hStdOut, homeCoords);
+}
+void setWindowSize(int width, int height){
+    HWND console = GetConsoleWindow();
+    RECT ConsoleRect;
+    GetWindowRect(console, &ConsoleRect);
+
+    MoveWindow(console, ConsoleRect.left, ConsoleRect.top, width, height, TRUE);
+}
+
+void readInput(){
+    switch(getch()){
+        case 'w': direction = UP; break;
+        case 'a': direction = LEFT; break;
+        case 's': direction = DOWN; break ;
+        case 'd': direction = RIGHT; break ;
+    }
+    cout << direction << endl ;
 }
