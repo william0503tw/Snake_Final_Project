@@ -11,10 +11,10 @@ using namespace std;
 //Variables declarations
 #define x_size 52 //size of ground (include boundary) 50 x 25
 #define y_size 27
-enum {GROUND,FOOD,WALL,HEAD,BODY}; //index -> 0,1,2,3,4
-enum {UP,DOWN,LEFT,RIGHT}; //direction -> 0,1,2,3
+enum {GROUND,FOOD,WALL,HEAD,BODY,OBSTACLE}; //index -> 0,1,2,3,4
+enum {UP,DOWN,LEFT,RIGHT,STAY}; //direction -> 0,1,2,3,4
 bool gameOver = false;
-int direction = RIGHT;
+int direction = STAY;
 //
 
 //class definition
@@ -25,6 +25,7 @@ private:
     int ground[x_size][y_size];
     int length;
     int x = 25 ,y = 15; //Snake head's (X,Y) coordinate // init place at (5,5)
+    int speed = 850; //950 full speed
 
 public:
     //ground
@@ -55,6 +56,7 @@ void resetColor();
 void clearScreen();
 void gotoXY(int x, int y);
 void setWindowSize(int width, int height);
+void ShowConsoleCursor(bool showFlag);
 //
 
 //start of class function definition
@@ -81,6 +83,7 @@ void snake::initPlayground(){
     }
 
     int temp ;
+    srand((unsigned int)time(NULL));
     for(int i = 1 ; i <= 7 ; i++){
         if(temp != rand()){
             int x = rand() % (x_size - 2) + 1 ;
@@ -114,17 +117,18 @@ void snake::drawGround() {
         for(int j = 0 ; j <= x_size-1 ; j++){
             if(ground[j][i] == WALL){
                 SetConsoleTextAttribute(hConsole, 11);
-                cout << "*"  ;
+                cout << (char)219   ;
             }else if(ground[j][i] == GROUND){
                 SetConsoleTextAttribute(hConsole, 7);
                 cout << " " ;
             }else if(ground[j][i] == FOOD){
-                cout << "+" ;
+                cout << "&" ;
             }
         }
         cout << endl ;
     }
     resetColor(); //reset Color
+    gotoXY(x,y); cout << (char)2;
 }
 int snake::onTouch(int x, int y) {
     return ground[x][y] ;
@@ -138,27 +142,38 @@ void snake::setHeadPos(int X, int Y){
     y = Y;
 }
 void snake::moveDirection(int direction){
-    if( (x < 50 && x > 0) && (y < 25 && y > 0)){
+    if( (x < 49 && x > 0) && (y < 24 && y > 0) && ground[x][y] != OBSTACLE){
         switch(direction){
             case UP :
-                gotoXY(x,y);
-                cout << " ";
+                cout <<"\b \b";
                 y--;
                 gotoXY(x,y);
                 cout << (char)2 ;
-                Sleep(10);
+                Sleep(1000 - speed);
                 break;
 
             case DOWN :
-
+                cout <<"\b \b";
+                y++;
+                gotoXY(x,y);
+                cout << (char)2 ;
+                Sleep(1000 - speed);
                 break;
 
             case LEFT:
-
+                cout <<"\b \b";
+                x--;
+                gotoXY(x,y);
+                cout << (char)2 ;
+                Sleep(1000 - speed);
                 break;
 
             case RIGHT:
-
+                cout <<"\b \b";
+                x++;
+                gotoXY(x,y);
+                cout << (char)2 ;
+                Sleep(1000 - speed);
                 break;
         }
     }
@@ -170,21 +185,15 @@ void snake::moveDirection(int direction){
 //main function
 int main() {
     setWindowSize(450,600);
+    ShowConsoleCursor(false);
     snake Snake;
+
     Snake.initPlayground();
     Snake.drawGround();
-
     _beginthread(readInput,0,(void*)0);
 
-    gotoXY(0,0);
-    cout << (char)2 ;
-    gotoXY(0,0);
-    cout << (char)127;
-    gotoXY(49,24);
-    cout << (char)2 ;
-
     while(!gameOver){
-        cout << direction << endl ;
+        Snake.moveDirection(direction);
     }
 
 
@@ -192,7 +201,7 @@ int main() {
 
 
 
-    gotoXY(0,33);
+    //gotoXY(0,33);
     system("pause");
     return 0;
 }
@@ -205,10 +214,8 @@ void gotoXY(int x, int y)
 {
     HANDLE hStdOut;
     COORD coord;
-
     hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
     if (hStdOut == INVALID_HANDLE_VALUE) return;
-
     coord.X = x + 1;
     coord.Y = y + 7;
     SetConsoleCursorPosition(hStdOut, coord);
@@ -256,7 +263,6 @@ void setWindowSize(int width, int height){
 
     MoveWindow(console, ConsoleRect.left, ConsoleRect.top, width, height, TRUE);
 }
-
 void readInput(void* id){
     char c;
     do{
@@ -271,4 +277,13 @@ void readInput(void* id){
     _endthread();
     return;
     //cout << direction << endl ;
+}
+void ShowConsoleCursor(bool showFlag){
+    HANDLE out = GetStdHandle(STD_OUTPUT_HANDLE);
+
+    CONSOLE_CURSOR_INFO     cursorInfo;
+
+    GetConsoleCursorInfo(out, &cursorInfo);
+    cursorInfo.bVisible = showFlag; // set the cursor visibility
+    SetConsoleCursorInfo(out, &cursorInfo);
 }
