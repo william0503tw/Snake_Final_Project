@@ -25,7 +25,7 @@ private:
     int ground[x_size][y_size];
     int length;
     int x = 25 ,y = 15; //Snake head's (X,Y) coordinate // init place at (5,5)
-    int speed = 850; //950 full speed
+    int speed = 900; //950 full speed
 
 public:
     //ground
@@ -42,7 +42,10 @@ public:
     //character info.
     int getLength(); //return snake's length
     void setLength();
+
     void setHeadPos(int x ,int y);
+    int getPosX();
+    int getPosY();
     int onTouch(int x, int y); //tells what thing does the snake's head touched
 
 
@@ -117,7 +120,7 @@ void snake::drawGround() {
         for(int j = 0 ; j <= x_size-1 ; j++){
             if(ground[j][i] == WALL){
                 SetConsoleTextAttribute(hConsole, 11);
-                cout << (char)219   ;
+                cout << "+"   ;
             }else if(ground[j][i] == GROUND){
                 SetConsoleTextAttribute(hConsole, 7);
                 cout << " " ;
@@ -128,7 +131,8 @@ void snake::drawGround() {
         cout << endl ;
     }
     resetColor(); //reset Color
-    gotoXY(x,y); cout << (char)2;
+    gotoXY(x,y);
+    cout << "@" ;
 }
 int snake::onTouch(int x, int y) {
     return ground[x][y] ;
@@ -148,7 +152,7 @@ void snake::moveDirection(int direction){
                 cout <<"\b \b";
                 y--;
                 gotoXY(x,y);
-                cout << (char)2 ;
+                cout << "@" ;
                 Sleep(1000 - speed);
                 break;
 
@@ -156,7 +160,7 @@ void snake::moveDirection(int direction){
                 cout <<"\b \b";
                 y++;
                 gotoXY(x,y);
-                cout << (char)2 ;
+                cout << "@" ;
                 Sleep(1000 - speed);
                 break;
 
@@ -164,7 +168,7 @@ void snake::moveDirection(int direction){
                 cout <<"\b \b";
                 x--;
                 gotoXY(x,y);
-                cout << (char)2 ;
+                cout << "@" ;
                 Sleep(1000 - speed);
                 break;
 
@@ -172,13 +176,19 @@ void snake::moveDirection(int direction){
                 cout <<"\b \b";
                 x++;
                 gotoXY(x,y);
-                cout << (char)2 ;
+                cout << "@" ;
                 Sleep(1000 - speed);
                 break;
         }
     }
-
 }
+int snake::getPosX(){
+    return this->x;
+};
+int snake::getPosY(){
+    return this->y;
+
+};
 // End of class definition
 
 
