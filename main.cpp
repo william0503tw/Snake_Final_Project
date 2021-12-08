@@ -50,7 +50,7 @@ public:
 };
 
 //Global Function Prototypes
-void readInput();
+void readInput(void* id);
 void resetColor();
 void clearScreen();
 void gotoXY(int x, int y);
@@ -174,8 +174,7 @@ int main() {
     Snake.initPlayground();
     Snake.drawGround();
 
-    thread t1 (readInput);
-    t1.join();
+    _beginthread(readInput,0,(void*)0);
 
     gotoXY(0,0);
     cout << (char)2 ;
@@ -258,12 +257,18 @@ void setWindowSize(int width, int height){
     MoveWindow(console, ConsoleRect.left, ConsoleRect.top, width, height, TRUE);
 }
 
-void readInput(){
-    switch(getch()){
-        case 'w': direction = UP; break;
-        case 'a': direction = LEFT; break;
-        case 's': direction = DOWN; break ;
-        case 'd': direction = RIGHT; break ;
-    }
-    cout << direction << endl ;
+void readInput(void* id){
+    char c;
+    do{
+        c = getch();
+        switch(c){
+            case 'w': direction = UP; break;
+            case 'a': direction = LEFT; break;
+            case 's': direction = DOWN; break ;
+            case 'd': direction = RIGHT; break ;
+        }
+    }while( (c != 'q') || c != (char)27);
+    _endthread();
+    return;
+    //cout << direction << endl ;
 }
