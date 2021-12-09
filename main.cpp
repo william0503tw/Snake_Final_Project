@@ -5,7 +5,6 @@
 #include <conio.h>
 #include <windows.h>
 #include <chrono>
-#include <future>
 using namespace std;
 
 //Variables declarations
@@ -20,17 +19,12 @@ int direction = STAY;
 //class definition
 class snake
 {
-private:
-    int score = 0;
-    int ground[x_size][y_size];
-    int length;
-    int x = 25 ,y = 15; //Snake head's (X,Y) coordinate // init place at (5,5)
-    int speed = 900; //950 full speed
-
 public:
     //ground
     void initPlayground();
     void drawGround();
+    void indexObstacle(int y , int x_start , int x_finish);
+    int ground[x_size][y_size];
 
     //score
     void setScore(int s);
@@ -39,15 +33,12 @@ public:
     //game logic
 
 
-    //character info.
-    int getLength(); //return snake's length
-    void setLength();
-
-    void setHeadPos(int x ,int y);
-    int getPosX();
-    int getPosY();
+    //角色資訊 character info
+    int x ,y; //Snake head's (X,Y) coordinate
+    int score = 0;
     int onTouch(int x, int y); //tells what thing does the snake's head touched
-
+    int length;
+    int speed = 900; //950 full speed
 
     //character movement
     void moveDirection(int direction);
@@ -85,24 +76,66 @@ void snake::initPlayground(){
         ground[x][26] = WALL ;
     }
 
+    //obstacles
+    indexObstacle(5,6,13);
+    indexObstacle(6,6,8);
+    indexObstacle(7,4,8);
+    indexObstacle(20,15,17);
+    indexObstacle(21,15,22);
+    indexObstacle(22,17,24);
+    indexObstacle(3,44,46);
+    indexObstacle(4,38,46);
+    indexObstacle(5,38,40);
+    indexObstacle(6,34,40);
+    indexObstacle(17,35,37);
+    indexObstacle(17,41,43);
+    indexObstacle(18,36,36);
+    indexObstacle(18,42,42);
+    indexObstacle(20,35,35);
+    indexObstacle(20,43,43);
+    indexObstacle(21,36,36);
+    indexObstacle(21,42,42);
+    indexObstacle(22,37,41);
+    indexObstacle(13,12,17);
+    indexObstacle(14,10,19);
+    indexObstacle(15,12,17);
+
+    //food
     int temp ;
     srand((unsigned int)time(NULL));
     for(int i = 1 ; i <= 7 ; i++){
         if(temp != rand()){
-            int x = rand() % (x_size - 2) + 1 ;
-            int y = rand() % (y_size - 2) + 1 ;
-            ground[x][y] = FOOD ;
+            int x = rand() % (x_size - 1) + 2 ;
+            int y = rand() % (y_size - 1) + 2 ;
+            if(ground[x][y] != OBSTACLE && ground[x][y] != WALL){
+                ground[x][y] = FOOD ;
+            }else{
+                ground[x][y] = OBSTACLE ;
+                i--;
+            }
         }else{
             srand(0);
-            int x = rand() % (x_size - 2) + 1 ;
-            int y = rand() % (y_size - 2) + 1 ;
-            ground[x][y] = FOOD ;
+            int x = rand() % (x_size - 1) + 2 ;
+            int y = rand() % (y_size - 1) + 2 ;
+            if(ground[x][y] != OBSTACLE && ground[x][y] != WALL){
+                ground[x][y] = FOOD ;
+            }else{
+                ground[x][y] = OBSTACLE ;
+                i--;
+            }
         }
         temp = rand();
     }
+
+    x = 25;
+    y = 15;
+
 }
 void snake::setScore(int s) {
-    this->score = s ;
+    cout << "\b \b";
+    gotoXY(28,-4);
+    cout << score ;
+    gotoXY(x,y);
 }
 void snake::drawScore(){
     cout << string(15,' ') << "////////////////////" << endl;
@@ -116,6 +149,15 @@ void snake::drawGround() {
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     clearScreen();
     drawScore();
+    /*//DEBUG
+    for(int i = 0 ; i <= y_size-1 ; i++){
+        for(int j = 0 ; j <= x_size-1 ; j++){
+            cout << ground[j][i] ;
+        }
+        cout << endl ;
+    }
+     */
+
     for(int i = 0 ; i <= y_size-1 ; i++){
         for(int j = 0 ; j <= x_size-1 ; j++){
             if(ground[j][i] == WALL){
@@ -125,6 +167,7 @@ void snake::drawGround() {
                 SetConsoleTextAttribute(hConsole, 7);
                 cout << " " ;
             }else if(ground[j][i] == FOOD){
+                SetConsoleTextAttribute(hConsole, 6);
                 cout << "&" ;
             }
         }
@@ -182,13 +225,6 @@ void snake::moveDirection(int direction){
         }
     }
 }
-int snake::getPosX(){
-    return this->x;
-};
-int snake::getPosY(){
-    return this->y;
-
-};
 // End of class definition
 
 
@@ -204,14 +240,17 @@ int main() {
 
     while(!gameOver){
         Snake.moveDirection(direction);
+        if(Snake.onTouch(Snake.x,Snake.y) == OBSTACLE || Snake.onTouch(Snake.x,Snake.y) == WALL){
+            gameOver = true;
+        }else if(Snake.onTouch(Snake.x,Snake.y) == FOOD){
+            Snake.ground[Snake.x][Snake.y] = GROUND;
+            Snake.setScore(Snake.score++);
+        }
+
+
     }
 
-
-
-
-
-
-    //gotoXY(0,33);
+    gotoXY(0,33);
     system("pause");
     return 0;
 }
@@ -220,18 +259,16 @@ void resetColor(){
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     SetConsoleTextAttribute(hConsole, 7);
 }
-void gotoXY(int x, int y)
-{
+void gotoXY(int x, int y){
     HANDLE hStdOut;
     COORD coord;
     hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
     if (hStdOut == INVALID_HANDLE_VALUE) return;
-    coord.X = x + 1;
-    coord.Y = y + 7;
+    coord.X = x ;
+    coord.Y = y + 6;
     SetConsoleCursorPosition(hStdOut, coord);
 }
-void clearScreen()
-{
+void clearScreen(){
     HANDLE                     hStdOut;
     CONSOLE_SCREEN_BUFFER_INFO csbi;
     DWORD                      count;
