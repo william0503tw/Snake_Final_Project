@@ -37,7 +37,7 @@ public:
     int x ,y; //Snake head's (X,Y) coordinate
     int score = 0;
     int onTouch(int x, int y); //tells what thing does the snake's head touched
-    int length;
+    int length = 3;
     int speed = 850; //990 full speed
 
     //character movement
@@ -268,7 +268,7 @@ int main() {
     while(!gameOver){
 
         Snake.moveDirection(direction);
-        if(Snake.onTouch(Snake.x,Snake.y) == OBSTACLE || Snake.onTouch(Snake.x,Snake.y) == WALL){
+        if(Snake.onTouch(Snake.x,Snake.y) == OBSTACLE || Snake.onTouch(Snake.x,Snake.y) == WALL || Snake.onTouch(Snake.x,Snake.y) == BODY){
             gameOver = true;
         }else if(Snake.onTouch(Snake.x,Snake.y) == FOOD){
             Snake.ground[Snake.x][Snake.y] = GROUND;
