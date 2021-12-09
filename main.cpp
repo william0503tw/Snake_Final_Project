@@ -38,7 +38,7 @@ public:
     int score = 0;
     int onTouch(int x, int y); //tells what thing does the snake's head touched
     int length;
-    int speed = 900; //950 full speed
+    int speed = 850; //990 full speed
 
     //character movement
     void moveDirection(int direction);
@@ -105,8 +105,8 @@ void snake::initPlayground(){
     srand((unsigned int)time(NULL));
     for(int i = 1 ; i <= 7 ; i++){
         if(temp != rand()){
-            int x = rand() % (x_size - 1) + 2 ;
-            int y = rand() % (y_size - 1) + 2 ;
+            int x = rand() % (x_size - 2) + 1 ;
+            int y = rand() % (y_size - 2) + 2 ;
             if(ground[x][y] != OBSTACLE && ground[x][y] != WALL){
                 ground[x][y] = FOOD ;
             }else{
@@ -173,9 +173,10 @@ void snake::drawGround() {
         }
         cout << endl ;
     }
-    resetColor(); //reset Color
+    SetConsoleTextAttribute(hConsole, 10);
     gotoXY(x,y);
     cout << "@" ;
+    resetColor();
 }
 int snake::onTouch(int x, int y) {
     return ground[x][y] ;
@@ -195,7 +196,9 @@ void snake::moveDirection(int direction){
                 cout <<"\b \b";
                 y--;
                 gotoXY(x,y);
+                SetConsoleTextAttribute(hConsole, 10);
                 cout << "@" ;
+                resetColor();
                 Sleep(1000 - speed);
                 break;
 
@@ -203,7 +206,9 @@ void snake::moveDirection(int direction){
                 cout <<"\b \b";
                 y++;
                 gotoXY(x,y);
+                SetConsoleTextAttribute(hConsole, 10);
                 cout << "@" ;
+                resetColor();
                 Sleep(1000 - speed);
                 break;
 
@@ -211,7 +216,9 @@ void snake::moveDirection(int direction){
                 cout <<"\b \b";
                 x--;
                 gotoXY(x,y);
+                SetConsoleTextAttribute(hConsole, 10);
                 cout << "@" ;
+                resetColor();
                 Sleep(1000 - speed);
                 break;
 
@@ -219,11 +226,30 @@ void snake::moveDirection(int direction){
                 cout <<"\b \b";
                 x++;
                 gotoXY(x,y);
+                SetConsoleTextAttribute(hConsole, 10);
                 cout << "@" ;
+                resetColor();
                 Sleep(1000 - speed);
                 break;
         }
     }
+}
+void snake::recreateFood(){
+    newRandom:
+    int new_x = rand() % (x_size - 2) + 2 ; //2~50
+    int new_y = rand() % (y_size - 2)  ; //2~25
+    if(ground[new_x][new_y] != OBSTACLE && ground[new_x][new_y] != WALL){
+        ground[new_x][new_y] = FOOD;
+        gotoXY(new_x,new_y);
+        SetConsoleTextAttribute(hConsole, 6);
+        cout << '&' ;
+        resetColor();
+        gotoXY(x,y);
+    }else{
+        srand(rand());
+        goto newRandom;
+    }
+
 }
 // End of class definition
 
@@ -238,19 +264,32 @@ int main() {
     Snake.drawGround();
     _beginthread(readInput,0,(void*)0);
 
+    int food_count = 0 ;
     while(!gameOver){
+
         Snake.moveDirection(direction);
         if(Snake.onTouch(Snake.x,Snake.y) == OBSTACLE || Snake.onTouch(Snake.x,Snake.y) == WALL){
             gameOver = true;
         }else if(Snake.onTouch(Snake.x,Snake.y) == FOOD){
             Snake.ground[Snake.x][Snake.y] = GROUND;
             Snake.setScore(Snake.score++);
+            Snake.recreateFood();
+            food_count++;
         }
 
-
+        if(Snake.score % 2 == 0 && Snake.score != 0 && food_count == 3){
+            if(Snake.speed <= 990){
+                Snake.speed += 80 ;
+                food_count = 0 ;
+            }
+        }
     }
 
-    gotoXY(0,33);
+    if(gameOver){
+        clearScreen();
+        cout << "Such A Loser XD" << endl ;
+    }
+    gotoXY(0,10);
     system("pause");
     return 0;
 }
