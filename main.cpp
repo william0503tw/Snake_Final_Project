@@ -5,43 +5,45 @@
 #include <conio.h>
 #include <windows.h>
 #include <chrono>
+#include <deque>
 using namespace std;
 
-//Variables declarations
+//變數宣告 Variables declarations
+HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 #define x_size 52 //size of ground (include boundary) 50 x 25
 #define y_size 27
 enum {GROUND,FOOD,WALL,HEAD,BODY,OBSTACLE}; //index -> 0,1,2,3,4
-enum {UP,DOWN,LEFT,RIGHT,STAY}; //direction -> 0,1,2,3,4
+enum {UP,DOWN,LEFT,RIGHT,INIT}; //direction -> 0,1,2,3,4
 bool gameOver = false;
-int direction = STAY;
-//
+int direction = INIT;
+int FOOD_COUNT = 3 ;
 
-//class definition
+//class宣告 class definition
 class snake
 {
 public:
-    //ground
+    //場地 ground
     void initPlayground();
     void drawGround();
     void indexObstacle(int y , int x_start , int x_finish);
     int ground[x_size][y_size];
 
-    //score
+    //遊戲邏輯 game logic
+    void recreateFood();
     void setScore(int s);
     void drawScore();
 
-    //game logic
-
-
     //角色資訊 character info
-    int x ,y; //Snake head's (X,Y) coordinate
+    int x = 25 ,y = 12; //Snake head's (X,Y) coordinate
     int score = 0;
     int onTouch(int x, int y); //tells what thing does the snake's head touched
     int length = 3;
-    int speed = 850; //990 full speed
+    deque<int> body_x = {25,25,25}; //init position
+    deque<int> body_y = {13,14,15}; //init position
+    int speed = 900; //990 full speed
 
     //character movement
-    void moveDirection(int direction);
+    void updateSnake(int direction);
 };
 
 //Global Function Prototypes
@@ -54,26 +56,36 @@ void ShowConsoleCursor(bool showFlag);
 //
 
 //start of class function definition
-void snake::initPlayground(){
+void snake::indexObstacle(int y , int x_start , int x_finish){
+    for(int i = x_start ; i <= x_finish ; i++ ){
+        ground[i][y] = OBSTACLE;
+    }
+}
+void snake::initPlayground()
+{
     //In this function, it will generate random location food, obstacles,
     //infill GROUND
-    for(int x = 1 ; x <= x_size-1 ; x++){
-        for(int y = 1 ; y <= y_size-1 ; y++) {
-            ground[x][y] = GROUND;
+    for(int i = 1 ; i <= x_size-1 ; i++){
+        for(int j = 1 ; j <= y_size-1 ; j++) {
+            ground[i][j] = GROUND;
         }
     }
     //build WALL
-    for(int y = 0 ; y <= y_size ; y++){
-        ground[0][y] = WALL ;
+    for(int i = 0 ; i <= y_size-1 ; i++){
+        ground[0][i] = WALL ;
     }
-    for(int y = 0 ; y <= y_size ; y++){
-        ground[51][y] = WALL ;
+
+
+    for(int i = 0 ; i <= y_size-1 ; i++){
+        ground[51][i] = WALL ;
     }
-    for(int x = 0 ; x <= x_size ; x++){
-        ground[x][0] = WALL ;
+
+
+    for(int i = 0 ; i <= x_size-1 ; i++){
+        ground[i][0] = WALL ;
     }
-    for(int x = 0 ; x <= x_size ; x++){
-        ground[x][26] = WALL ;
+    for(int i = 0 ; i <= x_size-1 ; i++){
+        ground[i][26] = WALL ;
     }
 
     //obstacles
@@ -103,33 +115,29 @@ void snake::initPlayground(){
     //food
     int temp ;
     srand((unsigned int)time(NULL));
-    for(int i = 1 ; i <= 7 ; i++){
+    for(int i = 1 ; i <= FOOD_COUNT ; i++){
         if(temp != rand()){
-            int x = rand() % (x_size - 2) + 1 ;
-            int y = rand() % (y_size - 2) + 2 ;
-            if(ground[x][y] != OBSTACLE && ground[x][y] != WALL){
-                ground[x][y] = FOOD ;
+            int x_ran = rand() % (x_size - 2) + 1 ;
+            int y_ran = rand() % (y_size - 2) + 2 ;
+            if(ground[x_ran][y_ran] != OBSTACLE && ground[x_ran][y_ran] != WALL){
+                ground[x_ran][y_ran] = FOOD ;
             }else{
-                ground[x][y] = OBSTACLE ;
+                ground[x_ran][y_ran] = OBSTACLE ;
                 i--;
             }
         }else{
             srand(0);
-            int x = rand() % (x_size - 1) + 2 ;
-            int y = rand() % (y_size - 1) + 2 ;
-            if(ground[x][y] != OBSTACLE && ground[x][y] != WALL){
-                ground[x][y] = FOOD ;
+            int x_ran = rand() % (x_size - 1) + 2 ;
+            int y_ran = rand() % (y_size - 1) + 2 ;
+            if(ground[x_ran][y_ran] != OBSTACLE && ground[x_ran][y_ran] != WALL){
+                ground[x_ran][y_ran] = FOOD ;
             }else{
-                ground[x][y] = OBSTACLE ;
+                ground[x_ran][y_ran] = OBSTACLE ;
                 i--;
             }
         }
         temp = rand();
     }
-
-    x = 25;
-    y = 15;
-
 }
 void snake::setScore(int s) {
     cout << "\b \b";
@@ -145,19 +153,10 @@ void snake::drawScore(){
     cout << string(15,' ') <<"////////////////////" << endl;
     cout << endl ;
 }
-void snake::drawGround() {
-    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+void snake::drawGround()
+{
     clearScreen();
     drawScore();
-    /*//DEBUG
-    for(int i = 0 ; i <= y_size-1 ; i++){
-        for(int j = 0 ; j <= x_size-1 ; j++){
-            cout << ground[j][i] ;
-        }
-        cout << endl ;
-    }
-     */
-
     for(int i = 0 ; i <= y_size-1 ; i++){
         for(int j = 0 ; j <= x_size-1 ; j++){
             if(ground[j][i] == WALL){
@@ -169,6 +168,9 @@ void snake::drawGround() {
             }else if(ground[j][i] == FOOD){
                 SetConsoleTextAttribute(hConsole, 6);
                 cout << "&" ;
+            }else if(ground[j][i] == OBSTACLE){
+                SetConsoleTextAttribute(hConsole, 7);
+                cout << "#" ;
             }
         }
         cout << endl ;
@@ -181,16 +183,8 @@ void snake::drawGround() {
 int snake::onTouch(int x, int y) {
     return ground[x][y] ;
 }
-int snake::getLength() {
-    return this->length;
-}
-void snake::setHeadPos(int X, int Y){
-    //set "Head" position
-    x = X;
-    y = Y;
-}
-void snake::moveDirection(int direction){
-    if( (x < 49 && x > 0) && (y < 24 && y > 0) && ground[x][y] != OBSTACLE){
+void snake::updateSnake(int direction){
+    if( (x < x_size-1 && x > 0) && (y < y_size-1 && y > 0) ){
         switch(direction){
             case UP :
                 cout <<"\b \b";
@@ -210,6 +204,7 @@ void snake::moveDirection(int direction){
                 cout << "@" ;
                 resetColor();
                 Sleep(1000 - speed);
+
                 break;
 
             case LEFT:
@@ -220,6 +215,7 @@ void snake::moveDirection(int direction){
                 cout << "@" ;
                 resetColor();
                 Sleep(1000 - speed);
+
                 break;
 
             case RIGHT:
@@ -230,8 +226,11 @@ void snake::moveDirection(int direction){
                 cout << "@" ;
                 resetColor();
                 Sleep(1000 - speed);
+
                 break;
+
         }
+
     }
 }
 void snake::recreateFood(){
@@ -266,9 +265,8 @@ int main() {
 
     int food_count = 0 ;
     while(!gameOver){
-
-        Snake.moveDirection(direction);
-        if(Snake.onTouch(Snake.x,Snake.y) == OBSTACLE || Snake.onTouch(Snake.x,Snake.y) == WALL || Snake.onTouch(Snake.x,Snake.y) == BODY){
+        Snake.updateSnake(direction);
+        if(Snake.onTouch(Snake.x,Snake.y) == OBSTACLE || Snake.onTouch(Snake.x,Snake.y) == WALL || Snake.onTouch(Snake.x,Snake.y) == BODY || Snake.onTouch(Snake.x,Snake.y) == BODY){
             gameOver = true;
         }else if(Snake.onTouch(Snake.x,Snake.y) == FOOD){
             Snake.ground[Snake.x][Snake.y] = GROUND;
@@ -277,9 +275,9 @@ int main() {
             food_count++;
         }
 
-        if(Snake.score % 2 == 0 && Snake.score != 0 && food_count == 3){
+        if(Snake.score % 5 == 0 && Snake.score != 0 && food_count == 5){
             if(Snake.speed <= 990){
-                Snake.speed += 80 ;
+                Snake.speed += 10 ;
                 food_count = 0 ;
             }
         }
