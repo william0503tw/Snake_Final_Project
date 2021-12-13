@@ -340,38 +340,40 @@ void gotoXY(int x, int y)
     coord.Y = y + 6;
     SetConsoleCursorPosition(hStdOut, coord); //設定游標位置
 }
-void clearScreen(){
-    HANDLE                     hStdOut;
+void clearScreen() {
+    HANDLE hStdOut;
     CONSOLE_SCREEN_BUFFER_INFO csbi;
-    DWORD                      count;
-    DWORD                      cellCount;
-    COORD                      homeCoords = { 0, 0 };
+    DWORD count;
+    DWORD cellCount;
+    COORD homeCoords = {0, 0};
 
     hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
     if (hStdOut == INVALID_HANDLE_VALUE) return;
 
     /* Get the number of cells and cell attributes in the current buffer */
     if (!GetConsoleScreenBufferInfo(hStdOut, &csbi)) return;
-    cellCount = csbi.dwSize.X *csbi.dwSize.Y;
+    cellCount = csbi.dwSize.X * csbi.dwSize.Y;
 
     /* Fill the entire buffer with spaces */
     if (!FillConsoleOutputCharacter(
-            hStdOut,		//handle to console screen buffer
-            (TCHAR) ' ',	//character to write to the buffer
-            cellCount,		//number of cells to write to
-            homeCoords,		//coordinates of first cell
-            &count			//receives the number of characters written
-    )) return;
+            hStdOut,        //handle to console screen buffer
+            (TCHAR) ' ',    //character to write to the buffer
+            cellCount,        //number of cells to write to
+            homeCoords,        //coordinates of first cell
+            &count            //receives the number of characters written
+    ))
+        return;
 
     /* Fill the entire buffer with the current colors and attributes */
     if (!FillConsoleOutputAttribute(
-            hStdOut,			//handle to console screen buffer
-            csbi.wAttributes,	//Character attributes to use
-            cellCount,			//Number of cells to set attribute
-            homeCoords,			//Coordinate of first cell
-            &count				//receives the number of characters written
-    )) return;
-
+            hStdOut,            //handle to console screen buffer
+            csbi.wAttributes,    //Character attributes to use
+            cellCount,            //Number of cells to set attribute
+            homeCoords,            //Coordinate of first cell
+            &count                //receives the number of characters written
+    ))
+        return;
+}
 
 void setWindowSize(int width, int height){
     HWND console = GetConsoleWindow(); //取得視窗的句炳
@@ -382,6 +384,7 @@ void setWindowSize(int width, int height){
     MoveWindow(console, ConsoleRect.left, ConsoleRect.top, width, height, TRUE);
     //改變指定視窗的位置和大小
 }
+
 void readInput(void* id) //判斷使用者的input
 {
     char c;
