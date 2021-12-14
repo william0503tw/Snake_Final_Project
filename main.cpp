@@ -18,6 +18,7 @@ bool gameOver = false;
 int direction = INIT;
 int FOOD_COUNT = 3 ;
 
+
 //class宣告 class definition
 class snake
 {
@@ -40,16 +41,19 @@ public:
     int length = 3;
     deque<int> body_x = {25,25,25}; //init position
     deque<int> body_y = {13,14,15}; //init position
-    int speed = 860; //990 full speedss
+    int speed = 860; //990 full speeds
+    int prev_x = 0 , prev_y = 0;
 
+    //place inside update snake
+    void drawBody();
     //character movement
     void updateSnake(int direction);
+
 };
 
 //Global Function Prototypes
 void readInput(void* id);
 void resetColor();
-void clearScreen();
 void gotoXY(int x, int y);
 void setWindowSize(int width, int height);
 void ShowConsoleCursor(bool showFlag);
@@ -75,11 +79,9 @@ void snake::initPlayground()
         ground[0][i] = WALL ;
     }
 
-
     for(int i = 0 ; i <= y_size-1 ; i++){
         ground[51][i] = WALL ;
     }
-
 
     for(int i = 0 ; i <= x_size-1 ; i++){
         ground[i][0] = WALL ;
@@ -87,6 +89,8 @@ void snake::initPlayground()
     for(int i = 0 ; i <= x_size-1 ; i++){
         ground[i][26] = WALL ;
     }
+
+
     //障礙物座標 obstacles
     indexObstacle(5,6,13);
     indexObstacle(6,6,8);
@@ -142,6 +146,8 @@ void snake::initPlayground()
         }
         temp = rand();
     }
+
+
 }
 void snake::setScore(int s)
 {
@@ -150,7 +156,6 @@ void snake::setScore(int s)
     cout << score ;         //更新分數
     gotoXY(x,y);           //游標回到蛇頭位置
 }
-
 void snake::drawScore() //畫出分數
 {
     cout << string(15,' ') << "////////////////////" << endl;
@@ -163,7 +168,7 @@ void snake::drawScore() //畫出分數
 
 void snake::drawGround()  //畫出場地
 {
-    clearScreen(); //清空屏幕
+    system("CLS"); //清空屏幕
     drawScore();   //畫出分數
     //畫出牆壁、食物、障礙物
     for(int i = 0 ; i <= y_size-1 ; i++)
@@ -196,13 +201,53 @@ int snake::onTouch(int x, int y)
     return ground[x][y] ; //回傳位置座標
 }
 
+void snake::drawBody(){
+
+    if(direction != INIT){
+        prev_x = x ;
+        prev_y = y ;
+
+        //清空畫面上一次畫出的蛇身
+        if(body_x.size() == body_y.size() && body_x.size() == length){
+            for(int i = 0 ; i <= body_x.size() - 1 ; i++){
+                ground[body_x[i]][body_y[i]] = GROUND ;
+                gotoXY(body_x[i],body_y[i]);
+                cout <<  " ";
+                resetColor();
+            }
+        }
+
+        //更新蛇身座標
+        body_x.push_back(prev_x);
+        body_y.push_back(prev_y);
+        body_x.pop_front();
+        body_y.pop_front();
+
+    }
+
+
+    //畫出現在的蛇身
+    if(body_x.size() == body_y.size() && body_x.size() == length){
+        for(int i = 0 ; i <= body_x.size() - 1 ; i++){
+            ground[body_x[i]][body_y[i]] = BODY ;
+            gotoXY(body_x[i],body_y[i]);
+            SetConsoleTextAttribute(hConsole, 10);
+            cout << 'X' ;
+            resetColor();
+        }
+    }
+
+};
+
 void snake::updateSnake(int direction)
 {
     if( (x < x_size-1 && x > 0) && (y < y_size-1 && y > 0) )
     {
         switch(direction){
             case UP :
-                cout <<"\b \b"; //清除蛇
+                gotoXY(x,y);
+                cout <<" "; //清除蛇頭
+                drawBody();
                 y--;
                 gotoXY(x,y);    //游標更新
                 SetConsoleTextAttribute(hConsole, 10);
@@ -212,36 +257,39 @@ void snake::updateSnake(int direction)
                 break;
 
             case DOWN :
-                cout <<"\b \b";
+                gotoXY(x,y);
+                cout <<" ";
+                drawBody();
                 y++;
                 gotoXY(x,y);
                 SetConsoleTextAttribute(hConsole, 10);
                 cout << "@" ;
                 resetColor();
                 Sleep(1000 - speed);
-
                 break;
 
             case LEFT:
-                cout <<"\b \b";
+                gotoXY(x,y);
+                cout <<" ";
+                drawBody();
                 x--;
                 gotoXY(x,y);
                 SetConsoleTextAttribute(hConsole, 10);
                 cout << "@" ;
                 resetColor();
                 Sleep(1000 - speed);
-
                 break;
 
             case RIGHT:
-                cout <<"\b \b";
+                gotoXY(x,y);
+                cout <<" ";
+                drawBody();
                 x++;
                 gotoXY(x,y);
                 SetConsoleTextAttribute(hConsole, 10);
                 cout << "@" ;
                 resetColor();
                 Sleep(1000 - speed);
-
                 break;
 
         }
@@ -280,13 +328,12 @@ int main() {
 
     Snake.initPlayground();  //設定出場地、牆壁、障礙物的座標
     Snake.drawGround();      //畫出場地、牆壁、障礙物
+    Snake.drawBody();
     _beginthread(readInput,0,(void*)0);
 
     int food_count = 0 ;
-    while(!gameOver)
-    {
+    while(!gameOver){
         Snake.updateSnake(direction); //根據使用者的input來移動蛇
-
         if(Snake.onTouch(Snake.x,Snake.y) == OBSTACLE || Snake.onTouch(Snake.x,Snake.y) == WALL || Snake.onTouch(Snake.x,Snake.y) == BODY)
         //蛇碰到障礙物、牆壁、蛇身 => GAMEOVER
         {
@@ -297,6 +344,7 @@ int main() {
         {
             Snake.ground[Snake.x][Snake.y] = GROUND;
             Snake.setScore(Snake.score++);
+            //Snake.length++;
             Snake.recreateFood();
             food_count++;
         }
@@ -314,9 +362,9 @@ int main() {
 
     if(gameOver)
     {
-        clearScreen();
+        system("CLS");
         cout << "Such A Loser XD" << endl ;
-        cout << "Your score is :" << Snake.score << endl;
+        cout << "Your score is : " << Snake.score << endl;
     }
 
     gotoXY(0,10);
@@ -340,40 +388,7 @@ void gotoXY(int x, int y)
     coord.Y = y + 6;
     SetConsoleCursorPosition(hStdOut, coord); //設定游標位置
 }
-void clearScreen() {
-    HANDLE hStdOut;
-    CONSOLE_SCREEN_BUFFER_INFO csbi;
-    DWORD count;
-    DWORD cellCount;
-    COORD homeCoords = {0, 0};
 
-    hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
-    if (hStdOut == INVALID_HANDLE_VALUE) return;
-
-    /* Get the number of cells and cell attributes in the current buffer */
-    if (!GetConsoleScreenBufferInfo(hStdOut, &csbi)) return;
-    cellCount = csbi.dwSize.X * csbi.dwSize.Y;
-
-    /* Fill the entire buffer with spaces */
-    if (!FillConsoleOutputCharacter(
-            hStdOut,        //handle to console screen buffer
-            (TCHAR) ' ',    //character to write to the buffer
-            cellCount,        //number of cells to write to
-            homeCoords,        //coordinates of first cell
-            &count            //receives the number of characters written
-    ))
-        return;
-
-    /* Fill the entire buffer with the current colors and attributes */
-    if (!FillConsoleOutputAttribute(
-            hStdOut,            //handle to console screen buffer
-            csbi.wAttributes,    //Character attributes to use
-            cellCount,            //Number of cells to set attribute
-            homeCoords,            //Coordinate of first cell
-            &count                //receives the number of characters written
-    ))
-        return;
-}
 
 void setWindowSize(int width, int height){
     HWND console = GetConsoleWindow(); //取得視窗的句炳
@@ -384,7 +399,6 @@ void setWindowSize(int width, int height){
     MoveWindow(console, ConsoleRect.left, ConsoleRect.top, width, height, TRUE);
     //改變指定視窗的位置和大小
 }
-
 void readInput(void* id) //判斷使用者的input
 {
     char c;
@@ -404,7 +418,6 @@ void readInput(void* id) //判斷使用者的input
 
     //cout << direction << endl ;  檢查判斷是否正確
 }
-
 //隱藏游標
 void ShowConsoleCursor(bool showFlag)
 {
