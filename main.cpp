@@ -39,6 +39,7 @@ public:
     int score = 0;
     int onTouch(int x, int y); //tells what thing does the snake's head touched
     int length = 3;
+    bool touchFood = false;
     deque<int> body_x = {25,25,25}; //init position
     deque<int> body_y = {13,14,15}; //init position
     int speed = 860; //990 full speeds
@@ -220,9 +221,12 @@ void snake::drawBody(){
         //更新蛇身座標
         body_x.push_back(prev_x);
         body_y.push_back(prev_y);
-        body_x.pop_front();
-        body_y.pop_front();
+        if(!touchFood){
+            body_x.pop_front();
+            body_y.pop_front();
 
+        }
+        touchFood = false;
     }
 
 
@@ -344,7 +348,8 @@ int main() {
         {
             Snake.ground[Snake.x][Snake.y] = GROUND;
             Snake.setScore(Snake.score++);
-            //Snake.length++;
+            Snake.touchFood = true;
+            Snake.length++;
             Snake.recreateFood();
             food_count++;
         }
