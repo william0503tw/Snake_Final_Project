@@ -2,6 +2,7 @@
 #include <iomanip>
 #include <string>
 #include <stdlib.h>
+#include <cstdlib>
 #include <conio.h>
 #include <windows.h>
 #include <chrono>
@@ -26,6 +27,7 @@ int FOOD_COUNT = 3 ;
 char answer;
 bool obstacle_on = true;
 bool obstacle_random = true;
+bool playagain = false;
 
 
 /* class definition */
@@ -64,14 +66,15 @@ public:
 };
 
 /* Global Function Prototypes */
+void printsnake();
 void readInput(void* id);
 void color(int color_number);
 void resetColor();
 void gotoXY(int x, int y);
 void setWindowSize(int width, int height);
 void ShowConsoleCursor(bool showFlag);
-void playagain();
-void time_counter();
+//void playagain();
+void drawset();
 //////////////////////////////
 
 
@@ -115,6 +118,18 @@ void snake::initPlayground()
     for(int i = 0 ; i <= x_size-1 ; i++)
     {
         ground[i][26] = WALL ;
+    }
+
+    //不隨機障礙物座標
+    if (obstacle_on == true && obstacle_random == false)
+    {
+        indexObstacle(5,6,13);    indexObstacle(6,6,8);     indexObstacle(7,4,8);
+        indexObstacle(20,15,17);  indexObstacle(21,15,22);  indexObstacle(22,17,24);
+        indexObstacle(3,44,46);   indexObstacle(4,38,46);   indexObstacle(5,38,40);
+        indexObstacle(6,34,40);   indexObstacle(17,35,37);  indexObstacle(17,41,43);
+        indexObstacle(18,36,36);  indexObstacle(18,42,42);  indexObstacle(20,35,35);
+        indexObstacle(20,43,43);  indexObstacle(21,36,36);  indexObstacle(21,42,42);
+        indexObstacle(22,37,41);  indexObstacle(13,12,17);  indexObstacle(14,10,19);  indexObstacle(15,12,17);
     }
 
     //隨機建立食物座標 food
@@ -206,6 +221,10 @@ void snake::drawGround()
                 if (skin == 3) color(9);   //藍色
                 if (skin == 4) color(12);  //紅色
                 cout << "&" ;
+            }else if(ground[j][i] == OBSTACLE && obstacle_on == true && obstacle_random == false)
+            {
+                color(7);
+                cout << "#";
             }else if(ground[j][i] == GROUND)
             {
                 color(7);
@@ -217,53 +236,59 @@ void snake::drawGround()
 
 
     //畫出傳送門
-    for (int i=1; i<=2; i++)
-    {
-        newRandom:
-        int new_x = rand() % (x_size-2) ; // x = 0~50
-        int new_y = rand() % (y_size-2) ; // y = 0~25
+    int new_x = rand() % (x_size-4)+1 ; // x = 1~48
+    int new_y = rand() % (y_size-4)+1 ; // y = 1~23
 
-        if(ground[new_x][new_y] == WALL)
-        {
-            ground[new_x][new_y] = PORTAL;
-            gotoXY(new_x,new_y);
-            if (skin == 1) color(120);  //白色
-            if (skin == 2) color('g');  //黃色
-            if (skin == 3) color('V');  //紫色
-            if (skin == 4) color(42);   //綠色
+    if (skin == 1) color(120);  //白色
+    if (skin == 2) color('g');  //黃色
+    if (skin == 3) color('V');  //紫色
+    if (skin == 4) color(42);   //綠色
 
-            if ((ground[0][new_y] == PORTAL || ground[52][new_y] == PORTAL) && ground[0][0] != PORTAL && ground[52][0] != PORTAL && ground[0][27] != PORTAL && ground[52][27] != PORTAL)
-            {
-                ground[new_x][new_y + 1] = PORTAL;
-                gotoXY(new_x, new_y);      cout << "O";
-                gotoXY(new_x, new_y + 1);  cout << "O";
-                gotoXY(new_x, new_y + 2);  cout << "O";
-            }
+    //左邊界上的傳送門
+    ground[0][new_y] = PORTAL;
+    ground[0][new_y + 1] = PORTAL;
+    ground[0][new_y + 2] = PORTAL;
+    ground[0][new_y + 3] = PORTAL;
+    gotoXY(0, new_y);      cout << "O";
+    gotoXY(0, new_y + 1);  cout << "O";
+    gotoXY(0, new_y + 2);  cout << "O";
+    gotoXY(0, new_y + 3);  cout << "O";
 
-            else if ((ground[new_x][0] == PORTAL || ground[new_x][27] == PORTAL) && ground[0][0] != PORTAL && ground[52][0] != PORTAL && ground[0][27] != PORTAL && ground[52][27] != PORTAL)
-            {
-                ground[new_x + 1][new_y] = PORTAL;
-                gotoXY(new_x , new_y);     cout << "O";
-                gotoXY(new_x + 1 , new_y); cout << "O";
-                gotoXY(new_x + 2 , new_y); cout << "O";
-            }else
-            {
-                srand(rand());
-                goto newRandom;
-            }
-            resetColor();
-            gotoXY(x,y);
-        }
-        else
-        {
-            srand(rand());
-            goto newRandom;
-        }
-    }
+    //右邊界上的傳送門
+    ground[51][new_y] = PORTAL;
+    ground[51][new_y + 1] = PORTAL;
+    ground[51][new_y + 2] = PORTAL;
+    ground[51][new_y + 3] = PORTAL;
+    gotoXY(51, new_y);     cout << "O";
+    gotoXY(51, new_y + 1); cout << "O";
+    gotoXY(51, new_y + 2); cout << "O";
+    gotoXY(51, new_y + 3); cout << "O";
 
+    //上邊界上的傳送門
+    ground[new_x][0] = PORTAL;
+    ground[new_x + 1][0] = PORTAL;
+    ground[new_x + 2][0] = PORTAL;
+    ground[new_x + 3][0] = PORTAL;
+    gotoXY(new_x, 0);      cout << "O";
+    gotoXY(new_x + 1, 0);  cout << "O";
+    gotoXY(new_x + 2, 0);  cout << "O";
+    gotoXY(new_x + 3, 0);  cout << "O";
+
+    //下邊界上的傳送門
+    ground[new_x][26] = PORTAL;
+    ground[new_x + 1][26] = PORTAL;
+    ground[new_x + 2][26] = PORTAL;
+    ground[new_x + 3][26] = PORTAL;
+    gotoXY(new_x, 26);     cout << "O";
+    gotoXY(new_x + 1, 26); cout << "O";
+    gotoXY(new_x + 2, 26); cout << "O";
+    gotoXY(new_x + 3, 26); cout << "O";
+
+    resetColor();
+    gotoXY(x,y);
 
     //畫出蛇頭
-    if (skin == 1) color(15);    //白色
+    if (skin == 1) color(15);   //白色
     if (skin == 2) color(175);  //綠色
     if (skin == 3) color(159);  //藍色
     if (skin == 4) color(79);   //紅色
@@ -276,7 +301,7 @@ void snake::drawGround()
     resetColor();
 
 
-    //隨機畫出障礙物
+    //畫出隨機障礙物
     if (obstacle_on == true && obstacle_random == true)
     {
         for (int i=1; i<=12; i++)
@@ -315,22 +340,6 @@ void snake::drawGround()
                 goto newRandom1;
             }
             gotoXY(x,y);
-        }
-    }
-
-    if (obstacle_on == true && obstacle_random == false)
-    {
-        indexObstacle(5,6,13);    indexObstacle(6,6,8);     indexObstacle(7,4,8);
-        indexObstacle(20,15,17);  indexObstacle(21,15,22);  indexObstacle(22,17,24);
-        indexObstacle(3,44,46);   indexObstacle(4,38,46);   indexObstacle(5,38,40);
-        indexObstacle(6,34,40);   indexObstacle(17,35,37);  indexObstacle(17,41,43);
-        indexObstacle(18,36,36);  indexObstacle(18,42,42);  indexObstacle(20,35,35);
-        indexObstacle(20,43,43);  indexObstacle(21,36,36);  indexObstacle(21,42,42);
-        indexObstacle(22,37,41);  indexObstacle(13,12,17);  indexObstacle(14,10,19);  indexObstacle(15,12,17);
-
-        for(int i=0, j=0 ; i<= y_size-1, j<=x_size-1 ; i++, j++)
-        {
-            if(ground[j][i] == OBSTACLE)  cout << "#" ;
         }
     }
 }
@@ -395,7 +404,7 @@ void snake::drawBody()
 //根據user的輸入，更新蛇的座標
 void snake::updateSnake(int direction)
 {
-    if( (x < x_size-1 && x > 0) && (y < y_size-1 && y > 0) )
+    if( (x <= x_size-1 && x >= 0) && (y <= y_size-1 && y >= 0) )
     {
         switch(direction)
         {
@@ -458,6 +467,63 @@ void snake::updateSnake(int direction)
                 resetColor();
                 Sleep(1000 - speed);
                 break;
+
+            case 10: //碰到上傳送門
+                gotoXY (x,y);
+                cout << " ";
+                y = 25;
+                gotoXY(x, y);
+                if (skin == 1) color(15);   //白色
+                if (skin == 2) color(175);  //綠色
+                if (skin == 3) color(159);  //藍色
+                if (skin == 4) color(79);   //紅色
+                cout << "@" ;
+                resetColor();
+                Sleep(1000 - speed);
+                break;
+
+            case 11: //碰到下傳送門
+                gotoXY (x,y);
+                cout << " ";
+                y = 1;
+                gotoXY(x, y);
+                if (skin == 1) color(15);   //白色
+                if (skin == 2) color(175);  //綠色
+                if (skin == 3) color(159);  //藍色
+                if (skin == 4) color(79);   //紅色
+                cout << "@" ;
+                resetColor();
+                Sleep(1000 - speed);
+                break;
+
+            case 12: //碰到左傳送門
+                gotoXY (x,y);
+                cout << " ";
+                x = 50;
+                gotoXY(x, y);
+                if (skin == 1) color(15);   //白色
+                if (skin == 2) color(175);  //綠色
+                if (skin == 3) color(159);  //藍色
+                if (skin == 4) color(79);   //紅色
+                cout << "@" ;
+                resetColor();
+                Sleep(1000 - speed);
+                break;
+
+            case 13: //碰到右傳送門
+                gotoXY (x,y);
+                cout << " ";
+                x = 1;
+                gotoXY(x, y);
+                if (skin == 1) color(15);    //白色
+                if (skin == 2) color(175);  //綠色
+                if (skin == 3) color(159);  //藍色
+                if (skin == 4) color(79);   //紅色
+                cout << "@" ;
+                resetColor();
+                Sleep(1000 - speed);
+                break;
+
         }
     }
 }
@@ -483,7 +549,7 @@ void snake::recreateFood()
     int new_x = rand() % (x_size - 2) + 2 ; // x = 2~50
     int new_y = rand() % (y_size - 2)  ;    // y = 2~25
 
-    if(ground[new_x][new_y] != OBSTACLE && ground[new_x][new_y] != WALL)
+    if(ground[new_x][new_y] != OBSTACLE && ground[new_x][new_y] != WALL && ground[new_x][new_y] != PORTAL)
     {
         ground[new_x][new_y] = FOOD;
         gotoXY(new_x,new_y);
@@ -511,7 +577,7 @@ void snake::addSpecialFood()
     int random_x = rand() % (x_size - 2) + 2 ; // x = 2~50
     int random_y = rand() % (y_size - 2)  ;    // y = 2~25
 
-    if(ground[random_x][random_y] != OBSTACLE && ground[random_x][random_y] != WALL && ground[random_x][random_y] != FOOD)
+    if(ground[random_x][random_y] != OBSTACLE && ground[random_x][random_y] != WALL && ground[random_x][random_y] != FOOD && ground[random_x][random_y] != PORTAL)
     {
         ground[random_x][random_y] = SPECIAL_FOOD;
         gotoXY(random_x,random_y);
@@ -534,148 +600,267 @@ void snake::addSpecialFood()
 //main function
 int main()
 {
-    do
+    setWindowSize(600,600);     //遊戲視窗大小
+    ShowConsoleCursor(false);  //隱藏游標
+
+    snake Snake;
+
+    system("CLS");
+
+    printsnake();
+    if (getch())  system("CLS");
+
+    system("CLS");
+    drawset();
+    gotoXY(8,0);
+    color(6);
+    cout << "  Color?  (1=white  2=green  3=blue  4=red) : ";
+    cin >> Snake.skin;
+    gotoXY(8,1);
+    cout << "  Speed?  Please enter a multiple of 10 (10~130) : ";
+    cin >> Snake.speed;
+    gotoXY(8,2);
+    cout << "  Obstacles? (1=Yes  0=No) : ";
+    cin >> obstacle_on;
+    if (obstacle_on == true)
     {
-        system("CLS");
-        snake Snake;
+        gotoXY(8,3);
+        cout << "  Random obstacle? (1=Yes  0=No) : ";
+        cin >> obstacle_random;
+    }
 
-        cout << "Color?  (1=white  2=green  3=blue  4=red) :";
-        cin >> Snake.skin;
-        cout << "Speed?  Please enter a multiple of 10 (10~130) :";
-        cin >> Snake.speed;
-        cout << "Obstacles? (1/0) :";
-        cin >> obstacle_on;
-        if (obstacle_on == true)
+    if (Snake.skin == 1) Snake.BODY_COLOR = 15;   //白色
+    else if (Snake.skin == 2) Snake.BODY_COLOR = 175;  //綠色
+    else if (Snake.skin == 3) Snake.BODY_COLOR = 159;  //藍色
+    else if (Snake.skin == 4) Snake.BODY_COLOR = 79;   //紅色
+    else
+    {
+        Snake.skin = 1;
+        Snake.BODY_COLOR = 15;
+    }
+
+    if (Snake.speed == 10) Snake.speed = 860;
+    else if (Snake.speed == 20) Snake.speed = 870;
+    else if (Snake.speed == 30) Snake.speed = 880;
+    else if (Snake.speed == 40) Snake.speed = 890;
+    else if (Snake.speed == 50) Snake.speed = 900;
+    else if (Snake.speed == 60) Snake.speed = 910;
+    else if (Snake.speed == 70) Snake.speed = 920;
+    else if (Snake.speed == 80) Snake.speed = 930;
+    else if (Snake.speed == 90) Snake.speed = 940;
+    else if (Snake.speed == 100) Snake.speed = 950;
+    else if (Snake.speed == 110) Snake.speed = 960;
+    else if (Snake.speed == 120) Snake.speed = 970;
+    else if (Snake.speed == 130) Snake.speed = 980;
+    else if (Snake.speed == 140) Snake.speed = 990;
+    else Snake.speed = 860;
+
+    system("CLS");
+
+    Snake.initPlayground();  //設定出場地、牆壁、障礙物的座標
+    Snake.drawGround();      //畫出場地、牆壁、障礙物
+    Snake.drawBody();        //畫出蛇
+    _beginthread(readInput,0,(void*)0);
+
+    int food_count = 0 ;
+    int special_food_count = 0 ;
+    int old_dir = -1;
+    gameOver = false;
+
+    while(!gameOver)
+    {
+        //若user的輸入與蛇現在的行進方向相反，則維持原本的方向行進
+        if ( oppositeDirection(direction, old_dir) == 1 )
         {
-            cout << "Random obstacle? (1/0) :";
-            cin >> obstacle_random;
+            Snake.updateSnake(old_dir);
         }
-
-        system("CLS");
-
-        if (Snake.skin == 1) Snake.BODY_COLOR = 15;   //白色
-        else if (Snake.skin == 2) Snake.BODY_COLOR = 175;  //綠色
-        else if (Snake.skin == 3) Snake.BODY_COLOR = 159;  //藍色
-        else if (Snake.skin == 4) Snake.BODY_COLOR = 79;   //紅色
+            //若user的輸入不與蛇現在行進的方向相反，則根據使用者的input來移動蛇
         else
         {
-            Snake.skin = 1;
-            Snake.BODY_COLOR = 15;
+            old_dir = direction;
+            Snake.updateSnake(direction);
         }
 
-        if (Snake.speed == 10) Snake.speed = 860;
-        else if (Snake.speed == 20) Snake.speed = 870;
-        else if (Snake.speed == 30) Snake.speed = 880;
-        else if (Snake.speed == 40) Snake.speed = 890;
-        else if (Snake.speed == 50) Snake.speed = 900;
-        else if (Snake.speed == 60) Snake.speed = 910;
-        else if (Snake.speed == 70) Snake.speed = 920;
-        else if (Snake.speed == 80) Snake.speed = 930;
-        else if (Snake.speed == 90) Snake.speed = 940;
-        else if (Snake.speed == 100) Snake.speed = 950;
-        else if (Snake.speed == 110) Snake.speed = 960;
-        else if (Snake.speed == 120) Snake.speed = 970;
-        else if (Snake.speed == 130) Snake.speed = 980;
-        else if (Snake.speed == 140) Snake.speed = 990;
-        else Snake.speed = 860;
-
-        setWindowSize(450,600);     //遊戲視窗大小
-        ShowConsoleCursor(false);  //隱藏游標
-
-        Snake.initPlayground();  //設定出場地、牆壁、障礙物的座標
-        Snake.drawGround();      //畫出場地、牆壁、障礙物
-        Snake.drawBody();        //畫出蛇
-        _beginthread(readInput,0,(void*)0);
-
-        int food_count = 0 ;
-        int special_food_count = 0 ;
-        int old_dir = -1;
-        gameOver = false;
-
-        while(!gameOver)
+        //蛇碰到障礙物、牆壁、蛇身 => GAMEOVER
+        if(Snake.onTouch(Snake.x,Snake.y) == OBSTACLE || Snake.onTouch(Snake.x,Snake.y) == WALL || Snake.onTouch(Snake.x,Snake.y) == BODY)
         {
-            //若user的輸入與蛇現在的行進方向相反，則維持原本的方向行進
-            if ( oppositeDirection(direction, old_dir) == 1 )
-            {
-                Snake.updateSnake(old_dir);
-            }
-                //若user的輸入不與蛇現在行進的方向相反，則根據使用者的input來移動蛇
-            else
-            {
-                old_dir = direction;
-                Snake.updateSnake(direction);
-            }
-
-            //蛇碰到障礙物、牆壁、蛇身 => GAMEOVER
-            if(Snake.onTouch(Snake.x,Snake.y) == OBSTACLE || Snake.onTouch(Snake.x,Snake.y) == WALL || Snake.onTouch(Snake.x,Snake.y) == BODY)
-            {
-                gameOver = true;
-            }
-
-                //蛇吃到食物 => 分數++、長度++、新增另一個食物
-            else if(Snake.onTouch(Snake.x,Snake.y) == FOOD)
-            {
-                Snake.ground[Snake.x][Snake.y] = GROUND;
-                Snake.setScore(Snake.score++);
-                Snake.touchFood = true;
-                Snake.length++;
-                Snake.recreateFood();
-                food_count++;
-                special_food_count++;
-            }
-
-                //蛇吃到特殊食物 => 分數++、長度++、改變身體符號及顏色
-            else if(Snake.onTouch(Snake.x,Snake.y) == SPECIAL_FOOD)
-            {
-                Snake.ground[Snake.x][Snake.y] = GROUND;
-                Snake.setScore(Snake.score++);
-                Snake.touchFood = true;
-                Snake.length++;
-                food_count++;
-                special_food_count++;
-                Snake.BODY_TYPE += (rand() % 2) + 1;
-                srand(rand());
-                Snake.BODY_COLOR = (rand() % 25) + 1;
-            }
-
-            //蛇碰到傳送門 => 傳送到另一個傳送門
-            /* else if(Snake.onTouch(Snake.x,Snake.y) == PORTAL && (ground[0][new_y] == PORTAL || ground[52][new_y] == PORTAL))
-            {
-                gotoXY())
-            }*/
-
-            //當分數 = 4 的倍數時 => 加速蛇的移動
-            if(Snake.score % 4 == 0 && Snake.score != 0 && food_count == 4 && Snake.speed <= 990)
-            {
-                Snake.setScore(Snake.speed += 10);
-                food_count = 0 ;
-            }
-
-            //當分數 = 6 的倍數 => 新增特殊食物
-            if ((Snake.score) % 6 == 0 && Snake.score != 0 && special_food_count == 6)
-            {
-                Snake.addSpecialFood();
-                special_food_count = 0;
-            }
+            gameOver = true;
+            Beep(880,250);
+            Beep(988,250);
+            Beep(880,250);
+            Beep(784,250);
+            Beep(880,250);
+            Beep(784,250);
+            Beep(740,250);
         }
 
-        //遊戲結束時，顯示分數並詢問是否重新開始
-        if(gameOver)
+            //蛇吃到食物 => 分數++、長度++、新增另一個食物
+        else if(Snake.onTouch(Snake.x,Snake.y) == FOOD)
         {
-            gotoXY (0,29);
-            cout << "Such A Loser XD" << endl ;
-            cout << "Your score is : " << Snake.score << endl;
-            cout << "Do you want to try again? (y/n) :" ;
-            cin >> answer;
-            cout << endl;
+            Snake.ground[Snake.x][Snake.y] = GROUND;
+            Snake.setScore(Snake.score++);
+            Snake.touchFood = true;
+            Snake.length++;
+            Snake.recreateFood();
+            food_count++;
+            special_food_count++;
+            Beep(880,50);
+            Beep(988,40);
         }
-    }while(answer == 'y' || answer == 'Y');
 
-    system("pause"); //使遊戲視窗不會被關閉
+            //蛇吃到特殊食物 => 分數++、長度++、改變身體符號及顏色
+        else if(Snake.onTouch(Snake.x,Snake.y) == SPECIAL_FOOD)
+        {
+            Snake.ground[Snake.x][Snake.y] = GROUND;
+            Snake.setScore(Snake.score++);
+            Snake.touchFood = true;
+            Snake.length++;
+            food_count++;
+            special_food_count++;
+            Snake.BODY_TYPE += (rand() % 2) + 1;
+            srand(rand());
+            Snake.BODY_COLOR = (rand() % 25) + 1;
+            Beep(880,50);
+            Beep(1330,40);
+        }
+
+            //蛇碰到傳送門 => 傳送
+        else if(Snake.onTouch(Snake.x,Snake.y) == PORTAL )
+        {
+            if (Snake.y == 0)
+            {
+                Snake.updateSnake(10);
+                Snake.ground[Snake.x][0] = PORTAL;
+                gotoXY (Snake.x, 0);
+                if (Snake.skin == 1) color(120);  //白色
+                if (Snake.skin == 2) color('g');  //黃色
+                if (Snake.skin == 3) color('V');  //紫色
+                if (Snake.skin == 4) color(42);   //綠色
+                cout << "O";
+                resetColor();
+                Beep(523,35);
+            }
+            else if (Snake.y == 26)
+            {
+                Snake.updateSnake(11);
+                Snake.ground[Snake.x][26] = PORTAL;
+                gotoXY (Snake.x, 26);
+                if (Snake.skin == 1) color(120);  //白色
+                if (Snake.skin == 2) color('g');  //黃色
+                if (Snake.skin == 3) color('V');  //紫色
+                if (Snake.skin == 4) color(42);   //綠色
+                cout << "O";
+                resetColor();
+                Beep(523,35);
+            }
+            else if (Snake.x == 0)
+            {
+                Snake.updateSnake(12);
+                Snake.ground[0][Snake.y] = PORTAL;
+                gotoXY (0, Snake.y);
+                if (Snake.skin == 1) color(120);  //白色
+                if (Snake.skin == 2) color('g');  //黃色
+                if (Snake.skin == 3) color('V');  //紫色
+                if (Snake.skin == 4) color(42);   //綠色
+                cout << "O";
+                resetColor();
+                Beep(523,35);
+            }
+            else if (Snake.x == 51)
+            {
+                Snake.updateSnake(13);
+                Snake.ground[51][Snake.y] = PORTAL;
+                gotoXY (51, Snake.y);
+                if (Snake.skin == 1) color(120);  //白色
+                if (Snake.skin == 2) color('g');  //黃色
+                if (Snake.skin == 3) color('V');  //紫色
+                if (Snake.skin == 4) color(42);   //綠色
+                cout << "O";
+                resetColor();
+                Beep(523,35);
+            }
+        }
+
+        //當分數 = 4 的倍數時 => 加速蛇的移動
+        if(Snake.score % 4 == 0 && Snake.score != 0 && food_count == 4 && Snake.speed <= 990)
+        {
+            Snake.setScore(Snake.speed += 10);
+            food_count = 0 ;
+        }
+
+        //當分數 = 6 的倍數 => 新增特殊食物
+        if ((Snake.score) % 6 == 0 && Snake.score != 0 && special_food_count == 6)
+        {
+            Snake.addSpecialFood();
+            special_food_count = 0;
+            Beep(1760,50);
+            Beep(880,40);
+        }
+    }
+
+
+    //遊戲結束時，顯示分數
+    if(gameOver == true)
+    {
+        system("cls");
+        gotoXY (0,-6);
+        cout << "=========================================" << endl;
+        cout << "||                                     ||" << endl;
+        cout << "||                                     ||" << endl;
+        cout << "||                                     ||" << endl;
+        cout << "||                                     ||" << endl;
+        cout << "||                                     ||" << endl;
+        cout << "||                                     ||" << endl;
+        cout << "=========================================" << endl;
+
+        gotoXY(11,-3);  cout << "Such A Loser XD " << endl ;
+        gotoXY(10,-2);  cout << "Your score is : " << Snake.score << endl;
+        gotoXY(11,1);   cout << endl;
+        system("pause");
+    }
 
     return 0;
 }
 
+//初始遊戲介面
+void printsnake()
+{
+    color(9);
+    cout << endl;
+    printf("     __________                                                        \n");
+    printf("    /          \\                                                      \n");
+    printf("   /  ________  \\                                                     \n");
+    printf("   |  |      |__|                                                      \n");
+    printf("   |  |                                                                \n");
+    printf("   \\  \\_______                              ___                      \n");
+    printf("    \\         \\    ____ ____      ____   __ |  |  ___   ______       \n");
+    printf("     \\_______  \\   |  |/    \\    /    \\_/ / |  | /  /  /      \\   \n");
+    printf("             \\  \\  |    ___  \\  / ____   /  |  |/  /  /  ____  \\   \n");
+    printf("              |  | |   /   \\  \\ | |  |  /   |     /  |  /____\\  |   \n");
+    printf("  \\  \\_______|  |  |  |    |  | | |__|  |   |     \\  |  ________/   \n");
+    printf("   \\            /  |  |    |  |  \\       \\  |  |\\  \\  \\  \\____  \n");
+    printf("    \\__________/   |__|    |__|   \\___/\\__\\ |__| \\__\\  \\______/ \n");
+    color(3);
+    cout << endl << setw(43) << "press to continue..." << endl;
+    resetColor();
+}
+
+void drawset()
+{
+    color(14);
+    cout << endl << endl << endl;
+    cout<< "       --------------------------------------------------------" << endl;
+    cout << "       |                                                      |" << endl;
+    cout << "       |                                                      |" << endl;
+    cout << "       |                                                      |" << endl;
+    cout << "       |                                                      |" << endl;
+    cout << "       |                                                      |" << endl;
+    cout << "       |                                                      |" << endl;
+    cout << "       |                                                      |" << endl;
+    cout << "       |                                                      |" << endl;
+    cout<< "       --------------------------------------------------------" << endl;
+    resetColor();
+}
 
 //設定顏色
 void color(int color_number)
@@ -737,8 +922,6 @@ void readInput(void* id)
     _endthread(); //终止由 _beginthread 所創建的線程
 
     return;
-
-    //cout << direction << endl ;  檢查判斷是否正確
 }
 
 
@@ -754,17 +937,64 @@ void ShowConsoleCursor(bool showFlag)
     SetConsoleCursorInfo(out, &cursorInfo);
 }
 
+void playMusic(){
+    while(1){
+        const int C    = 261;
+        const int Cis  = 277;
+        const int D    = 293;
+        const int Dis  = 311;
+        const int E    = 329;
+        const int F    = 349;
+        const int Fis  = 369;
+        const int G    = 391;
+        const int Gis  = 415;
+        const int A    = 440;
+        const int Ais  = 466;
+        const int H    = 493;
+        const int Takt = 1700;
 
-//計算時間
-/*void time_counter()
-{
-    snake Snake;
-    clock_t start, finish;
-    double duration;
+        Beep(E * 2, Takt / 4);
+        Beep(H * 1, Takt / 8);
+        Beep(C * 2, Takt / 8);
+        Beep(D * 2, Takt / 4);
+        Beep(C * 2, Takt / 8);
+        Beep(H * 1, Takt / 8);
+        Beep(A * 1, Takt / 4);
+        Beep(A * 1, Takt / 8);
+        Beep(C * 2, Takt / 8);
+        Beep(E * 2, Takt / 8);
+        Beep(E * 2, Takt / 8);
+        Beep(D * 2, Takt / 8);
+        Beep(C * 2, Takt / 8);
+        Beep(H * 1, Takt / 2.5);
+        Beep(C * 2, Takt / 8);
+        Beep(D * 2, Takt / 4);
+        Beep(E * 2, Takt / 4);
+        Beep(C * 2, Takt / 4);
+        Beep(A * 1, Takt / 4);
+        Beep(A * 1, Takt / 4);
+        Sleep(Takt / (8 / 3));
+        Beep(D * 2, Takt / 3.25);
+        Beep(F * 2, Takt / 8);
+        Beep(A * 2, Takt / 8);
+        Beep(A * 2, Takt / 8);
+        Beep(G * 2, Takt / 8);
+        Beep(F * 2, Takt / 8);
+        Beep(E * 2, Takt / 3);
+        Beep(C * 2, Takt / 8);
+        Beep(E * 2, Takt / 8);
+        Beep(E * 2, Takt / 8);
+        Beep(D * 2, Takt / 8);
+        Beep(C * 2, Takt / 8);
+        Beep(H * 1, Takt / 4);
+        Beep(H * 1, Takt / 8);
+        Beep(C * 2, Takt / 8);
+        Beep(D * 2, Takt / 4);
+        Beep(E * 2, Takt / 4);
+        Beep(C * 2, Takt / 4);
+        Beep(A * 1, Takt / 4);
+        Beep(A * 1, Takt / 4);
 
-    if(Snake.onTouch(Snake.x,Snake.y) == FOOD)
-    {
-        start = clock();
-        cout << start;
     }
-}*/
+}
+
